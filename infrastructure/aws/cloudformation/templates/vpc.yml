@@ -1,0 +1,74 @@
+# infrastructure/aws/cloudformation/templates/vpc.yml
+
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Import existing VPC infrastructure for Layla App'
+
+Parameters:
+  Environment:
+    Type: String
+    AllowedValues: [dev, staging, prod]
+    Description: Environment name
+    
+  ExistingVPCId:
+    Type: AWS::EC2::VPC::Id
+    Description: ID of existing VPC
+
+  ExistingPublicSubnet1:
+    Type: AWS::EC2::Subnet::Id
+    Description: ID of existing public subnet in AZ 1
+
+  ExistingPublicSubnet2:
+    Type: AWS::EC2::Subnet::Id
+    Description: ID of existing public subnet in AZ 2
+
+  ExistingPrivateSubnet1:
+    Type: AWS::EC2::Subnet::Id
+    Description: ID of existing private subnet in AZ 1
+
+  ExistingPrivateSubnet2:
+    Type: AWS::EC2::Subnet::Id
+    Description: ID of existing private subnet in AZ 2
+
+Resources:
+  VPCStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub 'https://s3.amazonaws.com/${TemplateBucket}/vpc.yml'
+      Parameters:
+        Environment: !Ref Environment
+        ImportedVPCId: !Ref ExistingVPCId
+        ImportedPublicSubnet1: !Ref ExistingPublicSubnet1
+        ImportedPublicSubnet2: !Ref ExistingPublicSubnet2
+        ImportedPrivateSubnet1: !Ref ExistingPrivateSubnet1
+        ImportedPrivateSubnet2: !Ref ExistingPrivateSubnet2
+
+Outputs:
+  VPCId:
+    Description: Imported VPC ID
+    Value: !Ref ExistingVPCId
+    Export:
+      Name: !Sub '${AWS::StackName}-VPCId'
+
+  PublicSubnet1:
+    Description: Imported Public Subnet 1
+    Value: !Ref ExistingPublicSubnet1
+    Export:
+      Name: !Sub '${AWS::StackName}-PublicSubnet1'
+
+  PublicSubnet2:
+    Description: Imported Public Subnet 2
+    Value: !Ref ExistingPublicSubnet2
+    Export:
+      Name: !Sub '${AWS::StackName}-PublicSubnet2'
+
+  PrivateSubnet1:
+    Description: Imported Private Subnet 1
+    Value: !Ref ExistingPrivateSubnet1
+    Export:
+      Name: !Sub '${AWS::StackName}-PrivateSubnet1'
+
+  PrivateSubnet2:
+    Description: Imported Private Subnet 2
+    Value: !Ref ExistingPrivateSubnet2
+    Export:
+      Name: !Sub '${AWS::StackName}-PrivateSubnet2'

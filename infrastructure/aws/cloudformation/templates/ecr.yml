@@ -1,0 +1,47 @@
+# infrastructure/aws/cloudformation/templates/ecr.yml
+
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Import existing ECR repositories for Layla App'
+
+Parameters:
+  Environment:
+    Type: String
+    AllowedValues: [dev, staging, prod]
+    Description: Environment name
+
+  ExistingRepositoryNames:
+    Type: CommaDelimitedList
+    Description: Names of existing ECR repositories
+
+  ExistingKMSKeyArn:
+    Type: String
+    Description: ARN of existing KMS key for ECR encryption
+
+Resources:
+  ECRRepositories:
+    Type: AWS::CloudFormation::Stack
+    DeletionPolicy: Retain
+    Properties:
+      Parameters:
+        RepositoryNames: !Join [',', !Ref ExistingRepositoryNames]
+        KMSKeyArn: !Ref ExistingKMSKeyArn
+
+  # Scan on Push Rule
+  ScanOnPushRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: !Sub '${Environment}-ECR-ScanOnPush'
+      Description: 'ECR Scan on Push Results'
+      EventPattern:
+        source: ['aws.ecr']
+        detail-type: ['ECR Image Scan']
+        detail:
+          scan-status: ['COMPLETE']
+          repository-name: !Ref ExistingRepositoryNames
+
+Outputs:
+  RepositoryUrls:
+    Description: URLs of ECR Repositories
+    Value: !GetAtt ECRRepositories.Outputs.RepositoryUrls
+    Export:
+      Name: !Sub '${AWS::StackName}-RepositoryUrls'

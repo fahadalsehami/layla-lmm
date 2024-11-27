@@ -1,0 +1,76 @@
+# infrastructure/aws/cloudformation/templates/s3.yml
+
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Import existing S3 buckets for Layla App'
+
+Parameters:
+  Environment:
+    Type: String
+    AllowedValues: [dev, staging, prod]
+    Description: Environment name
+
+  ExistingDataBucketName:
+    Type: String
+    Description: Name of existing data bucket
+
+  ExistingModelsBucketName:
+    Type: String
+    Description: Name of existing models bucket
+
+  ExistingLogsBucketName:
+    Type: String
+    Description: Name of existing logs bucket
+
+  ExistingKMSKeyArn:
+    Type: String
+    Description: ARN of existing KMS key for S3 encryption
+
+Resources:
+  DataBucket:
+    Type: AWS::CloudFormation::Stack
+    DeletionPolicy: Retain
+    Properties:
+      Parameters:
+        BucketName: !Ref ExistingDataBucketName
+        KMSKeyArn: !Ref ExistingKMSKeyArn
+
+  ModelsBucket:
+    Type: AWS::CloudFormation::Stack
+    DeletionPolicy: Retain
+    Properties:
+      Parameters:
+        BucketName: !Ref ExistingModelsBucketName
+        KMSKeyArn: !Ref ExistingKMSKeyArn
+
+  LogsBucket:
+    Type: AWS::CloudFormation::Stack
+    DeletionPolicy: Retain
+    Properties:
+      Parameters:
+        BucketName: !Ref ExistingLogsBucketName
+        KMSKeyArn: !Ref ExistingKMSKeyArn
+
+Outputs:
+  DataBucketName:
+    Description: Imported Data Bucket Name
+    Value: !Ref ExistingDataBucketName
+    Export:
+      Name: !Sub '${AWS::StackName}-DataBucketName'
+
+  ModelsBucketName:
+    Description: Imported Models Bucket Name
+    Value: !Ref ExistingModelsBucketName
+    Export:
+      Name: !Sub '${AWS::StackName}-ModelsBucketName'
+
+  LogsBucketName:
+    Description: Imported Logs Bucket Name
+    Value: !Ref ExistingLogsBucketName
+    Export:
+      Name: !Sub '${AWS::StackName}-LogsBucketName'
+
+  S3KMSKeyArn:
+    Description: KMS Key ARN for S3 Encryption
+    Value: !Ref ExistingKMSKeyArn
+    Export:
+      Name: !Sub '${AWS::StackName}-S3KMSKeyArn'

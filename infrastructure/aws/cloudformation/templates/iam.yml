@@ -1,0 +1,36 @@
+# infrastructure/aws/cloudformation/templates/iam.yml
+
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Import existing IAM roles for Layla App'
+
+Parameters:
+  Environment:
+    Type: String
+    AllowedValues: [dev, staging, prod]
+    Description: Environment name
+
+  ExistingRoleNames:
+    Type: CommaDelimitedList
+    Description: Names of existing IAM roles
+
+Resources:
+  IAMRoles:
+    Type: AWS::CloudFormation::Stack
+    DeletionPolicy: Retain
+    Properties:
+      Parameters:
+        RoleNames: !Join [',', !Ref ExistingRoleNames]
+
+  # IAM Access Analyzer
+  AccessAnalyzer:
+    Type: AWS::AccessAnalyzer::Analyzer
+    Properties:
+      AnalyzerName: !Sub '${Environment}-layla-app-analyzer'
+      Type: ACCOUNT
+
+Outputs:
+  RoleArns:
+    Description: ARNs of IAM Roles
+    Value: !GetAtt IAMRoles.Outputs.RoleArns
+    Export:
+      Name: !Sub '${AWS::StackName}-RoleArns'

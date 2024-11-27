@@ -1,0 +1,47 @@
+# infrastructure/aws/cloudformation/templates/lambda.yml
+
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Import existing Lambda functions for Layla App'
+
+Parameters:
+  Environment:
+    Type: String
+    AllowedValues: [dev, staging, prod]
+    Description: Environment name
+
+  ExistingFunctionNames:
+    Type: CommaDelimitedList
+    Description: Names of existing Lambda functions
+
+  ExistingKMSKeyArn:
+    Type: String
+    Description: ARN of existing KMS key for Lambda encryption
+
+Resources:
+  LambdaFunctions:
+    Type: AWS::CloudFormation::Stack
+    DeletionPolicy: Retain
+    Properties:
+      Parameters:
+        FunctionNames: !Join [',', !Ref ExistingFunctionNames]
+        KMSKeyArn: !Ref ExistingKMSKeyArn
+
+  # Error Rate Alarm
+  ErrorRateAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub '${Environment}-Lambda-ErrorRate'
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 1
+      ComparisonOperator: GreaterThanThreshold
+
+Outputs:
+  FunctionArns:
+    Description: ARNs of Lambda Functions
+    Value: !GetAtt LambdaFunctions.Outputs.FunctionArns
+    Export:
+      Name: !Sub '${AWS::StackName}-FunctionArns'

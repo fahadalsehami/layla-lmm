@@ -1,0 +1,77 @@
+# infrastructure/aws/cloudformation/templates/sagemaker.yml
+
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Import existing SageMaker infrastructure for Layla App'
+
+Parameters:
+  Environment:
+    Type: String
+    AllowedValues: [dev, staging, prod]
+    Description: Environment name
+    
+  ExistingNotebookInstanceName:
+    Type: String
+    Description: Name of existing SageMaker notebook instance
+
+  ExistingEndpointName:
+    Type: String
+    Description: Name of existing SageMaker endpoint
+
+  ExistingModelPackageGroupName:
+    Type: String
+    Description: Name of existing model package group
+
+  ExistingDomainId:
+    Type: String
+    Description: ID of existing SageMaker domain
+
+  ExistingKMSKeyArn:
+    Type: String
+    Description: ARN of existing KMS key for SageMaker encryption
+
+Resources:
+  SageMakerStack:
+    Type: AWS::CloudFormation::Stack
+    DeletionPolicy: Retain
+    Properties:
+      Parameters:
+        NotebookInstanceName: !Ref ExistingNotebookInstanceName
+        EndpointName: !Ref ExistingEndpointName
+        ModelPackageGroupName: !Ref ExistingModelPackageGroupName
+        DomainId: !Ref ExistingDomainId
+        KMSKeyArn: !Ref ExistingKMSKeyArn
+
+  # CloudWatch Alarms
+  EndpointInvocationAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub '${Environment}-SageMaker-Invocations'
+      MetricName: Invocations
+      Namespace: AWS/SageMaker
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 1000
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: EndpointName
+          Value: !Ref ExistingEndpointName
+
+Outputs:
+  NotebookInstanceName:
+    Description: SageMaker Notebook Instance Name
+    Value: !Ref ExistingNotebookInstanceName
+    Export:
+      Name: !Sub '${AWS::StackName}-NotebookInstanceName'
+
+  EndpointName:
+    Description: SageMaker Endpoint Name
+    Value: !Ref ExistingEndpointName
+    Export:
+      Name: !Sub '${AWS::StackName}-EndpointName'
+
+  ModelPackageGroupName:
+    Description: Model Package Group Name
+    Value: !Ref ExistingModelPackageGroupName
+    Export:
+      Name: !Sub '${AWS::StackName}-ModelPackageGroupName'

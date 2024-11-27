@@ -1,0 +1,78 @@
+# infrastructure/aws/cloudformation/templates/monitoring.yml
+
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Monitoring configuration for Layla App'
+
+Parameters:
+  Environment:
+    Type: String
+    AllowedValues: [dev, staging, prod]
+    Description: Environment name
+
+  AlarmSNSTopicArn:
+    Type: String
+    Description: ARN of SNS topic for alarms
+
+Resources:
+  # CloudWatch Dashboard
+  MainDashboard:
+    Type: AWS::CloudWatch::Dashboard
+    Properties:
+      DashboardName: !Sub '${Environment}-layla-app-dashboard'
+      DashboardBody: !Sub |
+        {
+          "widgets": [
+            {
+              "type": "metric",
+              "properties": {
+                "metrics": [
+                  ["AWS/SageMaker", "Invocations"]
+                ],
+                "period": 300,
+                "stat": "Sum",
+                "region": "${AWS::Region}",
+                "title": "SageMaker Endpoint Invocations"
+              }
+            },
+            {
+              "type": "metric",
+              "properties": {
+                "metrics": [
+                  ["AWS/Lambda", "Errors"]
+                ],
+                "period": 300,
+                "stat": "Sum",
+                "region": "${AWS::Region}",
+                "title": "Lambda Errors"
+              }
+            }
+          ]
+        }
+
+  # Composite Alarms
+  CompositeAlarm:
+    Type: AWS::CloudWatch::CompositeAlarm
+    Properties:
+      AlarmName: !Sub '${Environment}-layla-app-composite'
+      AlarmDescription: 'Composite alarm for critical services'
+      AlarmRule: !Sub |
+        ALARM(${Environment}-SageMaker-Invocations) OR
+        ALARM(${Environment}-Lambda-ErrorRate)
+
+  # Logs Insights Queries
+  LogsInsightsQueryDefinition:
+    Type: AWS::CloudWatch::QueryDefinition
+    Properties:
+      Name: !Sub '${Environment}-error-analysis'
+      QueryString: |
+        fields @timestamp, @message
+        | filter @message like /(?i)error/
+        | sort @timestamp desc
+        | limit 20
+
+Outputs:
+  DashboardURL:
+    Description: URL of CloudWatch Dashboard
+    Value: !Sub 'https://${AWS::Region}.console.aws.amazon.com/cloudwatch/home?region=${AWS::Region}#dashboards:name=${Environment}-layla-app-dashboard'
+    Export:
+      Name: !Sub '${AWS::StackName}-DashboardURL'

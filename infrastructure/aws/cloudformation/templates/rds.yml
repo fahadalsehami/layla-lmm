@@ -1,0 +1,111 @@
+# infrastructure/aws/cloudformation/templates/rds.yml
+
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Import existing RDS infrastructure for Layla App'
+
+Parameters:
+  Environment:
+    Type: String
+    AllowedValues: [dev, staging, prod]
+    Description: Environment name
+
+  ExistingDBInstanceIdentifier:
+    Type: String
+    Description: Identifier of existing RDS instance
+
+  ExistingDBSubnetGroupName:
+    Type: String
+    Description: Name of existing DB subnet group
+
+  ExistingDBSecurityGroupId:
+    Type: AWS::EC2::SecurityGroup::Id
+    Description: ID of existing DB security group
+
+  ExistingDBParameterGroupName:
+    Type: String
+    Description: Name of existing DB parameter group
+
+  ExistingKMSKeyArn:
+    Type: String
+    Description: ARN of existing KMS key for RDS encryption
+
+Resources:
+  RDSInstance:
+    Type: AWS::CloudFormation::Stack
+    DeletionPolicy: Retain
+    Properties:
+      Parameters:
+        DBInstanceIdentifier: !Ref ExistingDBInstanceIdentifier
+        DBSubnetGroupName: !Ref ExistingDBSubnetGroupName
+        VPCSecurityGroups: !Ref ExistingDBSecurityGroupId
+        DBParameterGroupName: !Ref ExistingDBParameterGroupName
+        KMSKeyArn: !Ref ExistingKMSKeyArn
+
+  DBCloudWatchAlarms:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub '${Environment}-RDS-CPUUtilization'
+      AlarmDescription: RDS CPU Utilization Alarm
+      MetricName: CPUUtilization
+      Namespace: AWS/RDS
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 80
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: DBInstanceIdentifier
+          Value: !Ref ExistingDBInstanceIdentifier
+
+  DBConnectionAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub '${Environment}-RDS-DatabaseConnections'
+      AlarmDescription: RDS Database Connections Alarm
+      MetricName: DatabaseConnections
+      Namespace: AWS/RDS
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 100
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: DBInstanceIdentifier
+          Value: !Ref ExistingDBInstanceIdentifier
+
+Outputs:
+  DBInstanceEndpoint:
+    Description: RDS Instance Endpoint
+    Value: !GetAtt RDSInstance.Outputs.DBEndpoint
+    Export:
+      Name: !Sub '${AWS::StackName}-DBEndpoint'
+
+  DBInstanceIdentifier:
+    Description: RDS Instance Identifier
+    Value: !Ref ExistingDBInstanceIdentifier
+    Export:
+      Name: !Sub '${AWS::StackName}-DBInstanceId'
+
+  DBSubnetGroupName:
+    Description: DB Subnet Group Name
+    Value: !Ref ExistingDBSubnetGroupName
+    Export:
+      Name: !Sub '${AWS::StackName}-DBSubnetGroupName'
+
+  DBSecurityGroupId:
+    Description: DB Security Group ID
+    Value: !Ref ExistingDBSecurityGroupId
+    Export:
+      Name: !Sub '${AWS::StackName}-DBSecurityGroupId'
+
+  DBParameterGroupName:
+    Description: DB Parameter Group Name
+    Value: !Ref ExistingDBParameterGroupName
+    Export:
+      Name: !Sub '${AWS::StackName}-DBParameterGroupName'
+
+  RDSKMSKeyArn:
+    Description: KMS Key ARN for RDS Encryption
+    Value: !Ref ExistingKMSKeyArn
+    Export:
+      Name: !Sub '${AWS::StackName}-RDSKMSKeyArn'

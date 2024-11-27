@@ -1,0 +1,51 @@
+# ```yaml
+# infrastructure/config/infrastructure.yaml
+
+environment:
+  current: dev  # Can be dev, staging, or prod
+  region: us-east-1
+  project_name: layla-app
+
+aws:
+  vpc:
+    cidr: 10.0.0.0/16
+    public_subnets:
+      - 10.0.1.0/24
+      - 10.0.2.0/24
+    private_subnets:
+      - 10.0.10.0/24
+      - 10.0.11.0/24
+  
+  rds:
+    instance_class: db.t3.medium
+    storage_size: 20
+    multi_az: false  # Set to true for prod
+    backup_retention: 7
+  
+  s3:
+    buckets:
+      data: layla-app-data
+      models: layla-app-models
+      logs: layla-app-logs
+  
+  sagemaker:
+    notebook_instance_type: ml.t3.medium
+    processing_instance_type: ml.t3.large
+
+nvidia:
+  cuda_version: "11.8"
+  cudnn_version: "8.6"
+  tensorrt_version: "8.5"
+  gpu_requirements:
+    memory: "8GB"
+    compute_capability: "7.0"
+
+database:
+  name: layla_db
+  port: 5432
+  max_connections: 100
+  backup_schedule: "0 2 * * *"  # Daily at 2 AM
+  schemas:
+    - layla_app
+    - layla_ml
+# ```
