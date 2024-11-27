@@ -1,0 +1,73 @@
+# infrastructure/aws/cloudformation/stacks/prod/stack-config.yml
+
+Description: 'Production environment stack configuration for Layla App'
+
+Parameters:
+  Environment: prod
+
+  # Network Configuration
+  VPCId: vpc-prod123xyz
+  PublicSubnet1Id: subnet-pub1prod123
+  PublicSubnet2Id: subnet-pub2prod123
+  PrivateSubnet1Id: subnet-priv1prod123
+  PrivateSubnet2Id: subnet-priv2prod123
+  VPCCidr: 10.2.0.0/16
+
+  # S3 Configuration
+  DataBucketName: layla-app-data-prod
+  ModelsBucketName: layla-app-models-prod
+  LogsBucketName: layla-app-logs-prod
+  S3KMSKeyArn: arn:aws:kms:us-east-1:123456789012:key/prod-s3-key
+
+  # RDS Configuration
+  DBInstanceIdentifier: layla-app-db-prod
+  DBSubnetGroupName: layla-app-db-subnet-group-prod
+  DBSecurityGroupId: sg-dbprod123
+  DBParameterGroupName: layla-app-db-pg-prod
+  RDSKMSKeyArn: arn:aws:kms:us-east-1:123456789012:key/prod-rds-key
+  DBInstanceClass: db.r6g.2xlarge
+  DBAllocatedStorage: 100
+  MultiAZ: true
+
+  # SageMaker Configuration
+  NotebookInstanceName: layla-app-notebook-prod
+  NotebookInstanceType: ml.t3.2xlarge
+  SageMakerEndpointName: layla-app-endpoint-prod
+  ModelPackageGroupName: layla-app-models-prod
+  DomainId: d-prod123xyz
+  SageMakerKMSKeyArn: arn:aws:kms:us-east-1:123456789012:key/prod-sagemaker-key
+
+  # ECR Configuration
+  ECRRepositoryNames: 
+    - layla-app-ml-model-prod
+    - layla-app-feature-extractor-prod
+    - layla-app-biomarker-processor-prod
+    - layla-app-inference-api-prod
+    - layla-app-data-processor-prod
+  ECRKMSKeyArn: arn:aws:kms:us-east-1:123456789012:key/prod-ecr-key
+
+  # Lambda Configuration
+  LambdaFunctionNames:
+    - layla-app-feature-processor-prod
+    - layla-app-biomarker-analyzer-prod
+    - layla-app-model-inference-prod
+    - layla-app-data-preprocessor-prod
+  LambdaKMSKeyArn: arn:aws:kms:us-east-1:123456789012:key/prod-lambda-key
+  LambdaMemorySize: 3072
+  LambdaTimeout: 900
+
+  # Monitoring Configuration
+  AlarmSNSTopicArn: arn:aws:sns:us-east-1:123456789012:layla-app-alarms-prod
+  RetentionInDays: 90
+  EnableDetailedMonitoring: true
+  BackupRetentionPeriod: 35
+  EnablePerformanceInsights: true
+
+Tags:
+  Project: layla-app
+  Environment: production
+  ManagedBy: cloudformation
+  CostCenter: production
+  Version: 1.0.0
+  ComplianceLevel: high
+  DataClassification: sensitive

@@ -1,0 +1,26 @@
+# infrastructure/nvidia/config/tensorrt.json
+{
+    "tensorrt_config": {
+        "fp16_mode": true,
+        "max_workspace_size": 1073741824,
+        "max_batch_size": 32,
+        "dla_core": 0,
+        "gpu_fallback": true,
+        "strict_type_constraints": false,
+        "profiling_verbosity": 1,
+        "engine_cache_enable": true
+    },
+    "optimization_profiles": [
+        {
+            "min_shape": [1, 3, 224, 224],
+            "opt_shape": [16, 3, 224, 224],
+            "max_shape": [32, 3, 224, 224]
+        }
+    ],
+    "calibration": {
+        "calibrator_type": "IInt8EntropyCalibrator2",
+        "calibration_batch_size": 32,
+        "calibration_batches": 100,
+        "cache_file": "calibration.cache"
+    }
+}

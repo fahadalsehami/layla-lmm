@@ -1,0 +1,69 @@
+# infrastructure/aws/cloudformation/stacks/dev/stack-config.yml
+
+Description: 'Development environment stack configuration for Layla App'
+
+Parameters:
+  Environment: dev
+
+  # Network Configuration
+  VPCId: vpc-dev123xyz
+  PublicSubnet1Id: subnet-pub1dev123
+  PublicSubnet2Id: subnet-pub2dev123
+  PrivateSubnet1Id: subnet-priv1dev123
+  PrivateSubnet2Id: subnet-priv2dev123
+  VPCCidr: 10.0.0.0/16
+
+  # S3 Configuration
+  DataBucketName: layla-app-data-dev
+  ModelsBucketName: layla-app-models-dev
+  LogsBucketName: layla-app-logs-dev
+  S3KMSKeyArn: arn:aws:kms:us-east-1:123456789012:key/dev-s3-key
+
+  # RDS Configuration
+  DBInstanceIdentifier: layla-app-db-dev
+  DBSubnetGroupName: layla-app-db-subnet-group-dev
+  DBSecurityGroupId: sg-dbdev123
+  DBParameterGroupName: layla-app-db-pg-dev
+  RDSKMSKeyArn: arn:aws:kms:us-east-1:123456789012:key/dev-rds-key
+  DBInstanceClass: db.t3.medium
+  DBAllocatedStorage: 20
+  MultiAZ: false
+
+  # SageMaker Configuration
+  NotebookInstanceName: layla-app-notebook-dev
+  NotebookInstanceType: ml.t3.medium
+  SageMakerEndpointName: layla-app-endpoint-dev
+  ModelPackageGroupName: layla-app-models-dev
+  DomainId: d-dev123xyz
+  SageMakerKMSKeyArn: arn:aws:kms:us-east-1:123456789012:key/dev-sagemaker-key
+
+  # ECR Configuration
+  ECRRepositoryNames: 
+    - layla-app-ml-model-dev
+    - layla-app-feature-extractor-dev
+    - layla-app-biomarker-processor-dev
+    - layla-app-inference-api-dev
+    - layla-app-data-processor-dev
+  ECRKMSKeyArn: arn:aws:kms:us-east-1:123456789012:key/dev-ecr-key
+
+  # Lambda Configuration
+  LambdaFunctionNames:
+    - layla-app-feature-processor-dev
+    - layla-app-biomarker-analyzer-dev
+    - layla-app-model-inference-dev
+    - layla-app-data-preprocessor-dev
+  LambdaKMSKeyArn: arn:aws:kms:us-east-1:123456789012:key/dev-lambda-key
+  LambdaMemorySize: 1024
+  LambdaTimeout: 300
+
+  # Monitoring Configuration
+  AlarmSNSTopicArn: arn:aws:sns:us-east-1:123456789012:layla-app-alarms-dev
+  RetentionInDays: 14
+  EnableDetailedMonitoring: false
+
+Tags:
+  Project: layla-app
+  Environment: development
+  ManagedBy: cloudformation
+  CostCenter: development
+  Version: 1.0.0
